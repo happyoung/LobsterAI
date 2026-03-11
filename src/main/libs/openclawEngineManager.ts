@@ -343,6 +343,8 @@ export class OpenClawEngineManager extends EventEmitter {
       canRetry: false,
     });
 
+    const compileCacheDir = path.join(this.stateDir, '.compile-cache');
+
     const env: NodeJS.ProcessEnv = {
       ...process.env,
       OPENCLAW_HOME: runtime.root,
@@ -355,6 +357,9 @@ export class OpenClawEngineManager extends EventEmitter {
       OPENCLAW_BUNDLED_PLUGINS_DIR: path.join(runtime.root, 'extensions'),
       // Enable debug-level logging so gateway emits phase-level detail during startup.
       OPENCLAW_LOG_LEVEL: 'debug',
+      // Enable V8 compile cache for both CJS and ESM modules.
+      // This env var works for import() (ESM), unlike enableCompileCache() which is CJS-only.
+      NODE_COMPILE_CACHE: compileCacheDir,
     };
 
     const forkArgs = ['gateway', '--bind', 'loopback', '--port', String(port), '--token', token, '--verbose'];
@@ -555,6 +560,14 @@ export class OpenClawEngineManager extends EventEmitter {
       `const { pathToFileURL } = require('node:url');\n` +
       `const path = require('node:path');\n` +
       `const fs = require('node:fs');\n` +
+      `// Enable V8 compile cache to speed up subsequent startups.\n` +
+      `// Cache is stored per-user so it survives app restarts and reboots.\n` +
+      `try {\n` +
+      `  const { enableCompileCache } = require('node:module');\n` +
+      `  const ccDir = path.join(process.env.OPENCLAW_STATE_DIR || __dirname, '.compile-cache');\n` +
+      `  enableCompileCache(ccDir);\n` +
+      `  process.stderr.write('[openclaw-launcher] compile-cache dir=' + require('node:module').getCompileCacheDir() + '\\n');\n` +
+      `} catch (_) {}\n` +
       `const esmEntry = path.join(__dirname, '${esmBasename}');\n` +
       `// Patch argv so openclaw's isMainModule() recognizes this as the main entry.\n` +
       `// In standard Node.js: process.argv = [execPath, scriptPath, ...args]\n` +
@@ -594,6 +607,7 @@ export class OpenClawEngineManager extends EventEmitter {
       `  process.stderr.write('[openclaw-launcher] loading bundle via import(): ' + bundleUrl + '\\n');\n` +
       `  import(bundleUrl).then(() => {\n` +
       `    process.stderr.write('[openclaw-launcher] import(gateway-bundle.mjs) ok (' + (Date.now() - t0) + 'ms)\\n');\n` +
+      `    try { require('node:module').flushCompileCache(); } catch (_) {}\n` +
       `  }).catch((err) => {\n` +
       `    process.stderr.write('[openclaw-launcher] import(gateway-bundle.mjs) failed (' + (Date.now() - t0) + 'ms): ' + (err.stack || err) + '\\n');\n` +
       `    process.stderr.write('[openclaw-launcher] Falling back to multi-file dist...\\n');\n` +
@@ -613,6 +627,7 @@ export class OpenClawEngineManager extends EventEmitter {
       `    } catch (_) {}\n` +
       `    require('./dist/entry.js');\n` +
       `    process.stderr.write('[openclaw-launcher] require(entry.js) ok (' + (Date.now() - t0) + 'ms)\\n');\n` +
+      `    try { require('node:module').flushCompileCache(); } catch (_) {}\n` +
       `  } catch (err) {\n` +
       `    process.stderr.write('[openclaw-launcher] require(entry.js) failed (' + (Date.now() - t0) + 'ms): ' + err.message + '\\n');\n` +
       `    const entryPath = path.join(__dirname, 'dist', 'entry.js');\n` +

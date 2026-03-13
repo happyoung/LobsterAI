@@ -1803,7 +1803,7 @@ const CoworkSessionDetail: React.FC<CoworkSessionDetailProps> = ({
     <div ref={detailRootRef} className="flex-1 flex flex-col dark:bg-claude-darkBg bg-claude-bg h-full">
       {/* Header */}
       <div className="draggable flex h-12 items-center justify-between px-4 border-b dark:border-claude-darkBorder border-claude-border dark:bg-claude-darkSurface/50 bg-claude-surface/50 shrink-0">
-        {/* Left side: Toggle buttons (when collapsed) + Title + Sandbox badge */}
+        {/* Left side: Toggle buttons (when collapsed) + Title */}
         <div className="flex h-full items-center gap-2 min-w-0">
           {isSidebarCollapsed && (
             <div className={`non-draggable flex items-center gap-1 ${isMac ? 'pl-[68px]' : ''}`}>
@@ -1845,11 +1845,6 @@ const CoworkSessionDetail: React.FC<CoworkSessionDetailProps> = ({
             <h1 className="text-sm leading-none font-medium dark:text-claude-darkText text-claude-text truncate max-w-[360px]">
               {currentSession.title || i18nService.t('coworkNewSession')}
             </h1>
-          )}
-          {currentSession.executionMode === 'local' && (
-            <span className="inline-flex items-center rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/30 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide">
-              {i18nService.t('coworkLocalBadge')}
-            </span>
           )}
         </div>
 

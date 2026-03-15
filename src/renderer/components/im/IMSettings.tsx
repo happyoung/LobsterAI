@@ -1769,28 +1769,20 @@ const IMSettings: React.FC = () => {
               <label className="block text-xs font-medium dark:text-claude-darkTextSecondary text-claude-textSecondary">
                 Bot Token
               </label>
-              <input
-                type="password"
-                value={tgOpenClawConfig.botToken}
-                onChange={(e) => handleTelegramOpenClawChange({ botToken: e.target.value })}
-                onBlur={() => handleSaveTelegramOpenClawConfig()}
-                className="block w-full rounded-lg dark:bg-claude-darkSurface/80 bg-claude-surface/80 dark:border-claude-darkBorder/60 border-claude-border/60 border focus:border-claude-accent focus:ring-1 focus:ring-claude-accent/30 dark:text-claude-darkText text-claude-text px-3 py-2 text-sm transition-colors"
-                placeholder="123456789:ABCdefGHIjklMNOpqrsTUVwxyz"
-              />
               <div className="relative">
                 <input
                   type={showSecrets['telegram.botToken'] ? 'text' : 'password'}
-                  value={config.telegram.botToken}
-                  onChange={(e) => handleTelegramChange('botToken', e.target.value)}
-                  onBlur={handleSaveConfig}
+                  value={tgOpenClawConfig.botToken}
+                  onChange={(e) => handleTelegramOpenClawChange({ botToken: e.target.value })}
+                  onBlur={() => handleSaveTelegramOpenClawConfig()}
                   className="block w-full rounded-lg dark:bg-claude-darkSurface/80 bg-claude-surface/80 dark:border-claude-darkBorder/60 border-claude-border/60 border focus:border-claude-accent focus:ring-1 focus:ring-claude-accent/30 dark:text-claude-darkText text-claude-text px-3 py-2 pr-16 text-sm transition-colors"
                   placeholder="123456789:ABCdefGHIjklMNOpqrsTUVwxyz"
                 />
                 <div className="absolute right-2 inset-y-0 flex items-center gap-1">
-                  {config.telegram.botToken && (
+                  {tgOpenClawConfig.botToken && (
                     <button
                       type="button"
-                      onClick={() => { handleTelegramChange('botToken', ''); void imService.updateConfig({ telegram: { ...config.telegram, botToken: '' } }); }}
+                      onClick={() => { handleTelegramOpenClawChange({ botToken: '' }); void imService.updateConfig({ telegram: { ...tgOpenClawConfig, botToken: '' } }); }}
                       className="p-0.5 rounded text-claude-textSecondary dark:text-claude-darkTextSecondary hover:text-claude-accent transition-colors"
                       title={i18nService.t('clear') || 'Clear'}
                     >

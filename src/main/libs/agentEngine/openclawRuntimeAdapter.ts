@@ -527,6 +527,8 @@ export class OpenClawRuntimeAdapter extends EventEmitter implements CoworkRuntim
   private readonly reCreatedChannelSessionIds = new Set<string>();
   /** Channel sessionKeys explicitly deleted by the user. Polling will not re-create these. */
   private readonly deletedChannelKeys = new Set<string>();
+  /** Session keys whose origin is "heartbeat" — discovered via polling, used to filter real-time events. */
+  private readonly heartbeatSessionKeys = new Set<string>();
   private channelPollingTimer: ReturnType<typeof setInterval> | null = null;
 
   private static readonly CHANNEL_POLL_INTERVAL_MS = 10_000;
@@ -737,6 +739,14 @@ export class OpenClawRuntimeAdapter extends EventEmitter implements CoworkRuntim
       for (const row of sessions) {
         const key = typeof row?.key === 'string' ? row.key : '';
         if (!key) continue;
+        // Skip heartbeat-originated sessions (origin.label === 'heartbeat')
+        if (isRecord(row)) {
+          const rowOrigin = (row as Record<string, unknown>).origin;
+          if (isRecord(rowOrigin) && (rowOrigin as Record<string, unknown>).label === 'heartbeat') {
+            this.heartbeatSessionKeys.add(key);
+            continue;
+          }
+        }
         const isChannel = this.channelSessionSync.isChannelSessionKey(key);
         if (!isChannel) continue;
         // Skip keys that were explicitly deleted by the user — only real-time events re-create them
@@ -779,6 +789,7 @@ export class OpenClawRuntimeAdapter extends EventEmitter implements CoworkRuntim
           if (!key) continue;
           if (!this.channelSessionSync.isChannelSessionKey(key)) continue;
           if (this.deletedChannelKeys.has(key)) continue;
+          if (this.heartbeatSessionKeys.has(key)) continue;
           const sessionId = this.sessionIdBySessionKey.get(key);
           if (!sessionId || !this.fullySyncedSessions.has(sessionId)) continue;
           // Skip sessions with an active turn (they handle their own sync)
@@ -1279,6 +1290,7 @@ export class OpenClawRuntimeAdapter extends EventEmitter implements CoworkRuntim
     this.gatewayReadyPromise = null;
     this.channelSessionSync?.clearCache();
     this.knownChannelSessionIds.clear();
+    this.heartbeatSessionKeys.clear();
     this.browserPrewarmAttempted = false;
     this.lastTickTimestamp = 0;
     // Clear messageUpdate throttle state
@@ -1588,7 +1600,8 @@ export class OpenClawRuntimeAdapter extends EventEmitter implements CoworkRuntim
     // Try to resolve channel-originated sessions (e.g. Telegram via OpenClaw)
     if (!sessionId && sessionKey && this.channelSessionSync) {
       const channelSessionId = this.channelSessionSync.resolveOrCreateSession(sessionKey)
-        || this.channelSessionSync.resolveOrCreateMainAgentSession(sessionKey);
+        || (!this.heartbeatSessionKeys.has(sessionKey) && this.channelSessionSync.resolveOrCreateMainAgentSession(sessionKey))
+        || null;
       console.log('[Debug:handleAgentEvent] channel resolve — channelSessionId:', channelSessionId);
       if (channelSessionId) {
         // If this key was previously deleted, allow re-creation but skip history sync
@@ -2300,7 +2313,8 @@ export class OpenClawRuntimeAdapter extends EventEmitter implements CoworkRuntim
     // Try to resolve channel-originated sessions for approval requests
     if (!sessionId && sessionKey && this.channelSessionSync) {
       const channelSessionId = this.channelSessionSync.resolveOrCreateSession(sessionKey)
-        || this.channelSessionSync.resolveOrCreateMainAgentSession(sessionKey);
+        || (!this.heartbeatSessionKeys.has(sessionKey) && this.channelSessionSync.resolveOrCreateMainAgentSession(sessionKey))
+        || null;
       if (channelSessionId) {
         this.rememberSessionKey(channelSessionId, sessionKey);
         sessionId = channelSessionId;
@@ -2366,7 +2380,8 @@ export class OpenClawRuntimeAdapter extends EventEmitter implements CoworkRuntim
     if (sessionKey && this.channelSessionSync) {
       console.log('[Debug:resolveSessionId] attempting channel resolve for sessionKey:', sessionKey);
       const channelSessionId = this.channelSessionSync.resolveOrCreateSession(sessionKey)
-        || this.channelSessionSync.resolveOrCreateMainAgentSession(sessionKey);
+        || (!this.heartbeatSessionKeys.has(sessionKey) && this.channelSessionSync.resolveOrCreateMainAgentSession(sessionKey))
+        || null;
       console.log('[Debug:resolveSessionId] channel resolve — sessionKey:', sessionKey, '→', channelSessionId);
       if (channelSessionId) {
         // If this key was previously deleted, allow re-creation but skip history sync

@@ -477,9 +477,31 @@ const createMarkdownComponents = (
       {children}
     </td>
   ),
-  img: ({ node, className, ...props }: any) => (
-    <img className="max-w-full h-auto rounded-xl my-4" {...props} />
-  ),
+  img: ({ node, className, src, alt, ...props }: any) => {
+    const [resolvedSrc, setResolvedSrc] = useState<string | undefined>(src);
+    useEffect(() => {
+      if (typeof src !== 'string') return;
+      const isFilePath = src.startsWith('file://') || src.startsWith('file:///');
+      if (!isFilePath) {
+        setResolvedSrc(src);
+        return;
+      }
+      let filePath: string;
+      try {
+        filePath = decodeURIComponent(new URL(src).pathname);
+      } catch {
+        filePath = src.replace(/^file:\/\//, '');
+      }
+      const readFile = (window as any)?.electron?.dialog?.readFileAsDataUrl;
+      if (typeof readFile !== 'function') return;
+      readFile(filePath).then((result: { success: boolean; dataUrl?: string }) => {
+        if (result?.success && result.dataUrl) {
+          setResolvedSrc(result.dataUrl);
+        }
+      }).catch(() => {});
+    }, [src]);
+    return <img className="max-w-full h-auto rounded-xl my-4" src={resolvedSrc} alt={alt} {...props} />;
+  },
   hr: ({ node, ...props }: any) => (
     <hr className="my-5 dark:border-claude-darkBorder border-claude-border" {...props} />
   ),

@@ -2707,16 +2707,18 @@ if (!gotTheLock) {
     }, IM_CONFIG_SYNC_DEBOUNCE_MS);
   };
 
-  ipcMain.handle('im:config:set', async (_event, config: Partial<IMGatewayConfig>) => {
+  ipcMain.handle('im:config:set', async (_event, config: Partial<IMGatewayConfig>, options?: { syncGateway?: boolean }) => {
     try {
-      getIMGatewayManager().setConfig(config);
+      getIMGatewayManager().setConfig(config, { syncGateway: options?.syncGateway });
 
       // Sync OpenClaw config once for all platform changes (instead of per-platform).
       // setConfig() already persists to DB synchronously, so syncOpenClawConfig just
       // needs to regenerate openclaw.json and restart the gateway once.
+      // Only trigger sync when explicitly requested via syncGateway flag (e.g. from
+      // the global Save button), to avoid frequent gateway restarts on every field blur.
       const hasOpenClawChange = config.telegram || config.discord || config.dingtalk
         || config.feishu || config.qq || config.wecom || config.popo;
-      if (hasOpenClawChange && getOpenClawEngineManager().getStatus().phase === 'running') {
+      if (options?.syncGateway && hasOpenClawChange && getOpenClawEngineManager().getStatus().phase === 'running') {
         scheduleImConfigSync();
       }
       return { success: true };
@@ -2724,6 +2726,23 @@ if (!gotTheLock) {
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Failed to set IM config',
+      };
+    }
+  });
+
+  // Explicitly trigger OpenClaw config sync + gateway restart.
+  // Called from the global Settings Save button after config fields have been
+  // persisted to DB via im:config:set (without syncGateway flag).
+  ipcMain.handle('im:config:sync', async () => {
+    try {
+      if (getOpenClawEngineManager().getStatus().phase === 'running') {
+        scheduleImConfigSync();
+      }
+      return { success: true };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to sync IM config',
       };
     }
   });

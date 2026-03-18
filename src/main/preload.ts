@@ -280,7 +280,8 @@ contextBridge.exposeInMainWorld('electron', {
   im: {
     // Configuration
     getConfig: () => ipcRenderer.invoke('im:config:get'),
-    setConfig: (config: any) => ipcRenderer.invoke('im:config:set', config),
+    setConfig: (config: any, options?: { syncGateway?: boolean }) => ipcRenderer.invoke('im:config:set', config, options),
+    syncConfig: () => ipcRenderer.invoke('im:config:sync'),
 
     // Gateway control
     startGateway: (platform: 'dingtalk' | 'feishu' | 'telegram' | 'discord' | 'nim' | 'xiaomifeng' | 'wecom' | 'popo') => ipcRenderer.invoke('im:gateway:start', platform),

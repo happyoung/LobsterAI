@@ -3,6 +3,7 @@ import { agentService } from '../../services/agent';
 import { i18nService } from '../../services/i18n';
 import { XMarkIcon, TrashIcon } from '@heroicons/react/24/outline';
 import type { Agent } from '../../types/agent';
+import AgentSkillSelector from './AgentSkillSelector';
 
 interface AgentSettingsPanelProps {
   agentId: string | null;
@@ -16,6 +17,7 @@ const AgentSettingsPanel: React.FC<AgentSettingsPanelProps> = ({ agentId, onClos
   const [systemPrompt, setSystemPrompt] = useState('');
   const [identity, setIdentity] = useState('');
   const [icon, setIcon] = useState('');
+  const [skillIds, setSkillIds] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
@@ -29,6 +31,7 @@ const AgentSettingsPanel: React.FC<AgentSettingsPanelProps> = ({ agentId, onClos
         setSystemPrompt(a.systemPrompt);
         setIdentity(a.identity);
         setIcon(a.icon);
+        setSkillIds(a.skillIds ?? []);
       }
     });
   }, [agentId]);
@@ -45,6 +48,7 @@ const AgentSettingsPanel: React.FC<AgentSettingsPanelProps> = ({ agentId, onClos
         systemPrompt: systemPrompt.trim(),
         identity: identity.trim(),
         icon: icon.trim(),
+        skillIds,
       });
       onClose();
     } finally {
@@ -131,6 +135,7 @@ const AgentSettingsPanel: React.FC<AgentSettingsPanelProps> = ({ agentId, onClos
               className="w-full px-3 py-2 rounded-lg border dark:border-claude-darkBorder border-claude-border bg-transparent dark:text-claude-darkText text-claude-text text-sm resize-none"
             />
           </div>
+          <AgentSkillSelector selectedSkillIds={skillIds} onChange={setSkillIds} />
         </div>
         <div className="flex items-center justify-between px-5 py-4 border-t dark:border-claude-darkBorder border-claude-border">
           <div>

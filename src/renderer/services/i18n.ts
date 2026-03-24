@@ -394,6 +394,10 @@ const translations: Record<LanguageType, Record<string, string>> = {
     agentDescriptionPlaceholder: '简短描述',
     agentIdentity: '身份',
     agentIdentityPlaceholder: '身份描述（IDENTITY.md）...',
+    agentSkills: '技能',
+    agentSkillsHint: '选择该 Agent 可使用的技能。不选则使用所有已启用技能。',
+    agentSkillsSearch: '搜索技能...',
+    agentSkillsNone: '点击选择技能',
     noPresetsAvailable: '所有预设已添加',
     creating: '创建中...',
 
@@ -1471,6 +1475,10 @@ const translations: Record<LanguageType, Record<string, string>> = {
     agentDescriptionPlaceholder: 'Brief description',
     agentIdentity: 'Identity',
     agentIdentityPlaceholder: 'Identity description (IDENTITY.md)...',
+    agentSkills: 'Skills',
+    agentSkillsHint: 'Select skills available to this Agent. Leave empty to use all enabled skills.',
+    agentSkillsSearch: 'Search skills...',
+    agentSkillsNone: 'Click to select skills',
     noPresetsAvailable: 'All presets have been added',
     creating: 'Creating...',
 

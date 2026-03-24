@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { agentService } from '../../services/agent';
 import { i18nService } from '../../services/i18n';
 import { XMarkIcon } from '@heroicons/react/24/outline';
+import AgentSkillSelector from './AgentSkillSelector';
 
 interface AgentCreateModalProps {
   isOpen: boolean;
@@ -13,6 +14,7 @@ const AgentCreateModal: React.FC<AgentCreateModalProps> = ({ isOpen, onClose }) 
   const [description, setDescription] = useState('');
   const [systemPrompt, setSystemPrompt] = useState('');
   const [icon, setIcon] = useState('');
+  const [skillIds, setSkillIds] = useState<string[]>([]);
   const [creating, setCreating] = useState(false);
 
   if (!isOpen) return null;
@@ -26,6 +28,7 @@ const AgentCreateModal: React.FC<AgentCreateModalProps> = ({ isOpen, onClose }) 
         description: description.trim(),
         systemPrompt: systemPrompt.trim(),
         icon: icon.trim() || undefined,
+        skillIds,
       });
       if (agent) {
         agentService.switchAgent(agent.id);
@@ -34,6 +37,7 @@ const AgentCreateModal: React.FC<AgentCreateModalProps> = ({ isOpen, onClose }) 
         setDescription('');
         setSystemPrompt('');
         setIcon('');
+        setSkillIds([]);
       }
     } finally {
       setCreating(false);
@@ -102,6 +106,7 @@ const AgentCreateModal: React.FC<AgentCreateModalProps> = ({ isOpen, onClose }) 
               className="w-full px-3 py-2 rounded-lg border dark:border-claude-darkBorder border-claude-border bg-transparent dark:text-claude-darkText text-claude-text text-sm resize-none"
             />
           </div>
+          <AgentSkillSelector selectedSkillIds={skillIds} onChange={setSkillIds} />
         </div>
         <div className="flex justify-end gap-2 px-5 py-4 border-t dark:border-claude-darkBorder border-claude-border">
           <button

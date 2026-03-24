@@ -7,6 +7,7 @@ import {
   updateAgent as updateAgentAction,
   removeAgent,
 } from '../store/slices/agentSlice';
+import { setActiveSkillIds, clearActiveSkills } from '../store/slices/skillSlice';
 import type { Agent, PresetAgent } from '../types/agent';
 
 class AgentService {
@@ -23,6 +24,7 @@ class AgentService {
           enabled: a.enabled,
           isDefault: a.isDefault,
           source: a.source,
+          skillIds: a.skillIds ?? [],
         }))));
       }
     } catch (error) {
@@ -52,6 +54,7 @@ class AgentService {
           enabled: agent.enabled,
           isDefault: agent.isDefault,
           source: agent.source,
+          skillIds: agent.skillIds ?? [],
         }));
         return agent;
       }
@@ -82,6 +85,7 @@ class AgentService {
             description: agent.description,
             icon: agent.icon,
             enabled: agent.enabled,
+            skillIds: agent.skillIds ?? [],
           },
         }));
         return agent;
@@ -126,6 +130,7 @@ class AgentService {
           enabled: agent.enabled,
           isDefault: agent.isDefault,
           source: agent.source,
+          skillIds: agent.skillIds ?? [],
         }));
         return agent;
       }
@@ -138,6 +143,12 @@ class AgentService {
 
   switchAgent(agentId: string): void {
     store.dispatch(setCurrentAgentId(agentId));
+    const agent = store.getState().agent.agents.find((a) => a.id === agentId);
+    if (agent?.skillIds?.length) {
+      store.dispatch(setActiveSkillIds(agent.skillIds));
+    } else {
+      store.dispatch(clearActiveSkills());
+    }
   }
 }
 

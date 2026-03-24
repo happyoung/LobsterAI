@@ -1323,6 +1323,9 @@ export class OpenClawConfigSync {
             ...(agent.icon ? { emoji: agent.icon } : {}),
           },
         } : {}),
+        // Per-agent skill whitelist: only when skillIds is non-empty.
+        // OpenClaw's resolveAgentSkillsFilter() uses this to filter available skills.
+        ...(agent.skillIds && agent.skillIds.length > 0 ? { skills: agent.skillIds } : {}),
       });
     }
 

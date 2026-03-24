@@ -8,6 +8,7 @@ interface AgentSummary {
   enabled: boolean;
   isDefault: boolean;
   source: 'custom' | 'preset';
+  skillIds: string[];
 }
 
 interface AgentState {
